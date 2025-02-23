@@ -12,18 +12,17 @@ composer require dezio/laravel-shell
 # Usage
 
 ```php
-use DeZio\Shell\Authentication\ServerCredentials;
-use DeZio\Shell\Contracts\HasServerCredentials;
-use DeZio\Shell\Facades\SSH;
+use DeZio\Shell\Authentication\ServerCredentials;use DeZio\Shell\Contracts\HasServerCredentials;use DeZio\Shell\Facades\SSH;
 
 class Server implements HasServerCredentials {
-    public function getLoginId() {
-        return __CLAS__ . "::" . $this->id;
-    }
-    
+
+    /**
+    * Returns a server credentials object.
+    * @return ServerCredentials
+    */
     public function getServerCredentials(): ServerCredentials {
         $login = new Login($this->username, $this->password);
-        return new ServerCredentials($login, $this->ip, $this->port);
+        return new ServerCredentials($login, $this->ip_address, $this->port);
     }
 }
 
