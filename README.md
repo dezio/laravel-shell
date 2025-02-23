@@ -1,6 +1,7 @@
 # Shell Manager for Laravel
-
-This package provides a simple way to communicate with servers via ssh.
+This package provides a simple way to communicate with servers via ssh. It is based on the phpseclib library
+It is a wrapper around the phpseclib library, which provides a simple way to communicate with servers via ssh.
+You can execute commands, process output and make I/O operations using this package.
 
 # Installation
 
@@ -11,7 +12,9 @@ composer require dezio/laravel-shell
 # Usage
 
 ```php
-use Dezio\LaravelShell\Shell;use DeZio\Shell\Authentication\Login;use DeZio\Shell\Authentication\ServerCredentials;use DeZio\Shell\Contracts\HasServerCredentials;use DeZio\Shell\Facades\SSH;
+use DeZio\Shell\Authentication\ServerCredentials;
+use DeZio\Shell\Contracts\HasServerCredentials;
+use DeZio\Shell\Facades\SSH;
 
 class Server implements HasServerCredentials {
     public function getLoginId() {

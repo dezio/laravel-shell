@@ -5,6 +5,7 @@
             "DeZio\\Shell\\": "src/"
         }
     },
+    "license": "MIT",
     "authors": [
         {
             "name": "Dennis Ziolkowski",
