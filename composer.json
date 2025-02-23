@@ -1,0 +1,27 @@
+{
+    "name": "dezio/laravel-shell",
+    "autoload": {
+        "psr-4": {
+            "DeZio\\Shell\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Dennis Ziolkowski",
+            "email": "ziolkowski@prepaid-hoster.de"
+        }
+    ],
+    "require": {
+        "phpseclib/phpseclib": "^3.0"
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "DeZio\\Shell\\ShellServiceProvider"
+            ],
+            "aliases": {
+                "Shell": "DeZio\\Shell\\Facades\\Shell"
+            }
+        }
+    }
+}
