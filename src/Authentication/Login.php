@@ -20,11 +20,21 @@ class Login
         $this->password = $password;
     }
 
+    /**
+     * Get the username.
+     *
+     * @return string The username.
+     */
     public function getUsername(): string
     {
         return $this->username;
     }
 
+    /**
+     * Retrieve the password.
+     *
+     * @return string|\phpseclib3\Crypt\RSA The password.
+     */
     public function getPassword(): mixed
     {
         return $this->password;
