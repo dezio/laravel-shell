@@ -35,12 +35,6 @@ class DynamicServer implements HasServerCredentials
         return $this;
     }
 
-
-    public function getLoginId(): string
-    {
-        return $this->host . ':' . $this->port;
-    }
-
     public function getServerCredentials(): ServerCredentials
     {
         $login = new Login($this->username, $this->password);

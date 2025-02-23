@@ -34,4 +34,9 @@ class ServerCredentials
     {
         return $this->port;
     }
+
+    public function getId()
+    {
+        return sprintf("%s@%s:%d", $this->login->getUsername(), $this->host, $this->port);
+    }
 }

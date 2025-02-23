@@ -27,7 +27,7 @@ class ShellContainer
      */
     public function addConnection(HasServerCredentials $connection)
     {
-        $loginId = $connection->getLoginId();
+        $loginId = $connection->getServerCredentials()->getId();
         if (isset($this->connections[$loginId])) {
             return $this->connections[$loginId];
         }
@@ -40,8 +40,10 @@ class ShellContainer
      */
     private function createConnection(HasServerCredentials $connection): Contracts\ShellConnection
     {
+        $loginId = $connection->getServerCredentials()->getId();
+
         Log::info("Creating connection", [
-            'loginId' => $connection->getLoginId(),
+            'loginId' => $loginId,
             'server'  => $connection->getServerCredentials()->getHost(),
         ]);
         return $this->loginFactory->createSSH2Connection($connection->getServerCredentials());
