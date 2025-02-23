@@ -7,6 +7,7 @@
 
 namespace DeZio\Shell;
 
+use Context;
 use DeZio\Shell\Contracts\HasServerCredentials;
 use DeZio\Shell\Factory\ShellFactory;
 use Log;
@@ -29,19 +30,18 @@ class ShellContainer
      */
     public function addConnection(HasServerCredentials $connection)
     {
+        $credentials = $connection->getServerCredentials();
         if ($this->config['logging']) {
             Log::info("Adding connection", [
-                'loginId' => $connection->getServerCredentials()->getId(),
-                'server'  => $connection->getServerCredentials()->getHost(),
+                'loginId' => $credentials->getId(),
+                'server'  => $credentials->getHost(),
             ]);
         } // if end
 
-        $loginId = $connection->getServerCredentials()->getId();
-        if (isset($this->connections[$loginId])) {
-            return $this->connections[$loginId];
-        } // if end
+        Context::add('ssh', $credentials->toArray());
+        $loginId = $credentials->getId();
 
-        return $this->connections[$loginId] = $this->createConnection($connection);
+        return $this->connections[$loginId] ?? ($this->connections[$loginId] = $this->createConnection($connection));
     }
 
     public function __destruct()

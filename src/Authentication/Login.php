@@ -12,9 +12,9 @@ use phpseclib3\Crypt\RSA;
 class Login
 {
     private string $username;
-    private string|\phpseclib3\Crypt\RSA $password;
+    private string|RSA $password;
 
-    public function __construct(string $username, string|\phpseclib3\Crypt\RSA $password)
+    public function __construct(string $username, string|RSA $password)
     {
         $this->username = $username;
         $this->password = $password;
@@ -33,7 +33,7 @@ class Login
     /**
      * Retrieve the password.
      *
-     * @return string|\phpseclib3\Crypt\RSA The password.
+     * @return string|RSA The password.
      */
     public function getPassword(): mixed
     {
