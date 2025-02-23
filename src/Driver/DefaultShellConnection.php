@@ -8,9 +8,11 @@
 namespace DeZio\Shell\Driver;
 
 use DeZio\Shell\Authentication\ServerCredentials;
+use DeZio\Shell\Contracts\CommandEncoder;
 use DeZio\Shell\Contracts\ShellConnection;
 use DeZio\Shell\Contracts\ShellFileSystem;
 use DeZio\Shell\Contracts\ShellResponse;
+use DeZio\Shell\Driver\Encoder\Base64Encoder;
 use DeZio\Shell\Exceptions\CommandException;
 use DeZio\Shell\Response\DefaultShellResponse;
 use Log;
@@ -20,43 +22,21 @@ class DefaultShellConnection implements ShellConnection
 {
     private SSH2 $ssh;
     private ServerCredentials $credentials;
+    private CommandEncoder $encoder;
+
     private array $config = [
         'logging'    => true,
-        'trimOutput' => true,
+        'trim_output' => true,
         'timeout'    => 10,
         'throwError' => false,
         'throwErrorCounter' => -1
     ];
 
-    public function withLogging(bool $logging): ShellConnection
-    {
-        $newConfig = $this->config;
-        $newConfig['logging'] = $logging;
-
-        return new self($this->ssh, $this->credentials, $newConfig);
-    }
-
-    public function withTrimOutput(bool $trimOutput): ShellConnection
-    {
-        $newConfig = $this->config;
-        $newConfig['trimOutput'] = $trimOutput;
-
-        return new self($this->ssh, $this->credentials, $newConfig);
-    }
-
-    public function withTimeout(int $timeout): ShellConnection
-    {
-        $newConfig = $this->config;
-        $newConfig['timeout'] = $timeout;
-
-        return new self($this->ssh, $this->credentials, $newConfig);
-    }
-
     public function withThrowError(bool $throwError, int $maxTimes = -1): ShellConnection
     {
         $newConfig = $this->config;
-        $newConfig['throwError'] = $throwError;
-        $newConfig['throwErrorCounter'] = $maxTimes;
+        $newConfig['throw_error'] = $throwError;
+        $newConfig['throw_error_counter'] = $maxTimes;
 
         return new self($this->ssh, $this->credentials, $newConfig);
     }
@@ -66,6 +46,7 @@ class DefaultShellConnection implements ShellConnection
         $this->ssh = $ssh;
         $this->credentials = $credentials;
         $this->config = array_merge($this->config, $config);
+        $this->encoder = app()->make($this->config['decode_commands']);
     }
 
     protected function log(string $level, string $message, array $meta = []): void
@@ -92,6 +73,7 @@ class DefaultShellConnection implements ShellConnection
         $command = implode(' ', $args);
         $this->ssh->setTimeout($this->getTimeout());
 
+        $command = $this->encoder->encode($command);
         $output = $this->ssh->exec($command);
         $error = $this->ssh->getLastError();
         $exitCode = $this->ssh->getExitStatus();
@@ -125,7 +107,7 @@ class DefaultShellConnection implements ShellConnection
 
     public function isTrimOutput(): bool
     {
-        return $this->config['trimOutput'];
+        return $this->config['trim_output'];
     }
 
     public function getTimeout(): int
@@ -135,7 +117,7 @@ class DefaultShellConnection implements ShellConnection
 
     public function isThrowError(): bool
     {
-        return $this->config['throwError'];
+        return $this->config['throw_error'];
     }
 
     public function io(): ShellFileSystem

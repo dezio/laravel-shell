@@ -47,44 +47,4 @@ interface ShellConnection
      *
      */
     public function io(): ShellFileSystem;
-
-    /**
-     * Enable or disable logging for the shell connection.
-     *
-     * @param bool $logging Determines whether logging is enabled.
-     * @return ShellConnection
-     */
-    public function withLogging(bool $logging): ShellConnection;
-
-    /**
-     * Sets the trim output option for the shell connection.
-     *
-     * @param bool $trimOutput Indicates whether output should be trimmed.
-     * @return ShellConnection
-     */
-    public function withTrimOutput(bool $trimOutput): ShellConnection;
-
-    /**
-     * Sets the timeout duration for the shell connection.
-     *
-     * @param int $timeout The timeout duration in seconds.
-     * @return ShellConnection
-     */
-    public function withTimeout(int $timeout): ShellConnection;
-
-    /**
-     * Sets the throw error option for the shell connection.
-     *
-     * @param bool $throwError Specifies whether an error should be thrown during execution.
-     * @param int $maxTimes The maximum number of times an error can occur (-1 for unlimited).
-     * @return ShellConnection
-     */
-    public function withThrowError(bool $throwError, int $maxTimes = -1): ShellConnection;
-
-    /**
-     * Closes the current connection or operation.
-     *
-     * @return void
-     */
-    public function close(): void;
 }

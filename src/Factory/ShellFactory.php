@@ -12,6 +12,7 @@ use DeZio\Shell\Contracts\ShellConnection;
 use DeZio\Shell\Driver\DefaultShellConnection;
 use DeZio\Shell\Exceptions\LoginException;
 use Exception;
+use Log;
 use phpseclib3\Net\SSH2;
 
 class ShellFactory
@@ -30,6 +31,14 @@ class ShellFactory
             throw new LoginException($credentials);
         } // if end
 
-        return new DefaultShellConnection($ssh, $credentials);
+        $config = config('shell');
+        $defaultShell = $config['default_shell'] ?? null;
+        throw_unless($defaultShell, new Exception('Default shell not set in config file'));
+
+        return app()->make($defaultShell, [
+            'ssh' => $ssh,
+            'credentials' => $credentials,
+            'config' => $config,
+        ]);
     }
 }
