@@ -171,13 +171,13 @@ class DefaultShellConnection implements ShellConnection
      */
     private function decrementThrowErrorCounter(): void
     {
-        if ($this->config['throwErrorCounter'] > 0) {
-            $this->config['throwErrorCounter']--;
+        if ($this->config['throw_error_counter'] > 0) {
+            $this->config['throw_error_counter']--;
         }
 
-        if ($this->config['throwErrorCounter'] === 0) {
-            $this->config['throwErrorCounter'] = -1;
-            $this->config['throwError'] = false;
+        if ($this->config['throw_error_counter'] === 0) {
+            $this->config['throw_error_counter'] = -1;
+            $this->config['throw_error'] = false;
         }
     }
 
