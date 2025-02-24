@@ -97,6 +97,56 @@ Register your custom encoder in the configuration file (`config/shell.php`):
 'decode_commands' => MyCustomEncoder::class,
 ```
 
+## System Information Examples
+
+### Parsing Current Load Average Using /proc/loadavg
+
+Retrieve the load average by reading /proc/loadavg.
+```php
+use DeZio\Shell\Dynamic\DynamicServer;
+use DeZio\Shell\Facades\SSH;
+
+$server = new DynamicServer('192.168.1.2', 22, 'root', 'password');
+$shell = SSH::addConnection($server);
+
+$response = $shell->exec(['cat', '/proc/loadavg']);
+$output = trim($response->getOutput());
+// Expected output format: "0.21 0.35 0.44 1/234 5678"
+$parts = explode(' ', $output);
+if(count($parts) >= 3) {
+    echo "Load averages: 1min {$parts[0]}, 5min {$parts[1]}, 15min {$parts[2]}\n";
+}
+```
+
+### Getting Memory Usage Using /proc/meminfo
+
+Retrieve memory info by reading /proc/meminfo.
+```php
+use DeZio\Shell\Dynamic\DynamicServer;
+use DeZio\Shell\Facades\SSH;
+
+$server = new DynamicServer('192.168.1.2', 22, 'root', 'password');
+$shell = SSH::addConnection($server);
+
+$response = $shell->exec(['cat', '/proc/meminfo']);
+$output = $response->getOutput();
+$lines = explode("\n", $output);
+$memTotal = $memAvailable = null;
+foreach ($lines as $line) {
+    if (strpos($line, 'MemTotal:') === 0) {
+        $parts = preg_split('/\s+/', $line);
+        $memTotal = $parts[1] ?? null;
+    }
+    if (strpos($line, 'MemAvailable:') === 0) {
+        $parts = preg_split('/\s+/', $line);
+        $memAvailable = $parts[1] ?? null;
+    }
+}
+if ($memTotal !== null && $memAvailable !== null) {
+    echo "Memory Usage: Total {$memTotal} kB, Available {$memAvailable} kB\n";
+}
+```
+
 ## Configuration
 
 Publish and customize the configuration with:
