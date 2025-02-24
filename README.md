@@ -30,6 +30,12 @@ $shell->io()->writeFile(TMP_HELLO_PATH, $file);
 $shell->io()->deleteFile(TMP_HELLO_PATH);
 ```
 
+The returned response object (of type ShellResponse) provides additional details:
+- getOutput(): Returns the standard output from the command.
+- getError(): Returns any error messages or standard error output.
+- getExitCode(): Returns the exit code (0 usually indicates success).
+- isSuccess(): Boolean flag that indicates whether the command executed successfully.
+
 ## Advanced Usage
 
 ### SSH Key Authentication
@@ -54,6 +60,7 @@ Any Laravel model can be used for managing SSH credentials by implementing the H
 ```php
 use Illuminate\Database\Eloquent\Model;
 use DeZio\Shell\Contracts\HasServerCredentials;
+use DeZio\Shell\Authentication\Login;
 use DeZio\Shell\Authentication\ServerCredentials;
 
 class Server extends Model implements HasServerCredentials
@@ -61,7 +68,8 @@ class Server extends Model implements HasServerCredentials
     // Assuming the model has host, port, username and password_or_key properties.
     public function getServerCredentials(): ServerCredentials
     {
-        return new ServerCredentials($this->host, $this->port, $this->username, $this->password_or_key);
+        $login = new Login($this->username, $this->password_or_key);
+        return new ServerCredentials($login, $this->host, $this->port);
     }
 }
 ```
