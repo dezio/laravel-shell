@@ -15,14 +15,23 @@ use Exception;
 use Log;
 use phpseclib3\Net\SSH2;
 
+/**
+ * Factory class for creating Shell instances.
+ *
+ * This class is responsible for creating and configuring Shell objects
+ * with the specified parameters and settings.
+ *
+ * @since 1.0.0
+ */
 class ShellFactory
 {
+    
     /**
-     * Create a new SSH2 connection
-     *
-     * @param ServerCredentials $credentials
-     * @return ShellConnection
-     * @throws Exception
+     * Creates a new SSH2 connection using provided server credentials
+     * 
+     * @param ServerCredentials $credentials The credentials object containing server connection details
+     * @return ShellConnection An instance of ShellConnection representing the established SSH2 connection
+     * @throws \RuntimeException If the SSH2 connection cannot be established
      */
     public function createSSH2Connection(ServerCredentials $credentials): ShellConnection
     {

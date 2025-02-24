@@ -20,10 +20,10 @@ interface ShellConnection
     public function getCredentials(): ServerCredentials;
 
     /**
-     * Execute the provided arguments and return the shell response.
+     * Execute a shell command with the given arguments as one command and return the shell response.
      *
-     * @param array $args Array of arguments to be executed.
-     * @return ShellResponse The response from the shell execution.
+     * @param array $args The arguments to pass to the shell command.
+     * @return ShellResponse The response from the shell command execution.
      */
     public function exec(array $args): ShellResponse;
 
@@ -36,10 +36,11 @@ interface ShellConnection
     public function execSimple(string $command): ShellResponse;
 
     /**
-     * Process the provided arguments and return a JSON-encoded array.
+     * Processes the provided arguments to generate a JSON response.
      *
-     * @param array $args Array of arguments to be processed.
-     * @return array The JSON-encoded representation of the processed arguments.
+     * @param array $args An array of parameters required for JSON processing.
+     *
+     * @return array The resulting data as an associative array.
      */
     public function json(array $args): array;
 

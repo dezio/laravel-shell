@@ -10,6 +10,13 @@ namespace DeZio\Shell\Contracts;
 use DeZio\Shell\Authentication\Login;
 use DeZio\Shell\Authentication\ServerCredentials;
 
+/**
+ * Interface HasServerCredentials
+ *
+ * This interface defines the contract for classes that provide server credentials.
+ *
+ * @package App\Contracts
+ */
 interface HasServerCredentials
 {
     /**

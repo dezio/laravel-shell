@@ -14,6 +14,12 @@ class Login
     private string $username;
     private string|\phpseclib3\Crypt\RSA $password;
 
+    /**
+     * Constructor for the Login class.
+     *
+     * @param string $username The username for authentication.
+     * @param string|\phpseclib3\Crypt\RSA $password The password for authentication, which can be a string or an RSA object.
+     */
     public function __construct(string $username, string|\phpseclib3\Crypt\RSA $password)
     {
         $this->username = $username;

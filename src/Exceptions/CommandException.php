@@ -9,6 +9,13 @@ namespace DeZio\Shell\Exceptions;
 
 use DeZio\Shell\Authentication\ServerCredentials;
 
+/**
+ * Exception thrown for command-related errors.
+ *
+ * This exception indicates that an error has occurred while
+ * running or processing a shell command within the application.
+ *
+ */
 class CommandException extends \Exception
 {
     private string $command;
