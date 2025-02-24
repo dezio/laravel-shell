@@ -8,7 +8,9 @@
 namespace DeZio\Shell;
 
 use DeZio\Shell\Contracts\ShellConnection;
+use DeZio\Shell\Contracts\ShellFactoryContract;
 use DeZio\Shell\Driver\DefaultShellConnection;
+use DeZio\Shell\Factory\ShellFactory;
 use Illuminate\Support\ServiceProvider;
 
 class ShellServiceProvider extends ServiceProvider
@@ -21,5 +23,6 @@ class ShellServiceProvider extends ServiceProvider
         ], 'shell-config');
         $this->app->singleton(ShellContainer::class);
         $this->app->bind(ShellConnection::class, DefaultShellConnection::class);
+        $this->app->bind(ShellFactoryContract::class, ShellFactory::class);
     }
 }

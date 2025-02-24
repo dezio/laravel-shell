@@ -7,7 +7,9 @@
 
 namespace DeZio\Shell\Authentication;
 
-class ServerCredentials
+use Illuminate\Contracts\Support\Arrayable;
+
+class ServerCredentials implements Arrayable
 {
     private Login $login;
     private string $host;
@@ -65,5 +67,15 @@ class ServerCredentials
     public function getId()
     {
         return sprintf("%s@%s:%d", $this->login->getUsername(), $this->host, $this->port);
+    }
+
+    public function toArray()
+    {
+        return [
+            'id' => $this->getId(),
+            'login' => $this->login->getUsername(),
+            'host' => $this->host,
+            'port' => $this->port,
+        ];
     }
 }

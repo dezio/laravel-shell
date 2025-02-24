@@ -1,4 +1,5 @@
 # Shell Manager for Laravel
+
 This package provides a simple way to communicate with servers via ssh. It is based on the phpseclib library
 It is a wrapper around the phpseclib library, which provides a simple way to communicate with servers via ssh.
 You can execute commands, process output and make I/O operations using this package.
@@ -73,6 +74,7 @@ interface ShellConnection
 ## Exceptions
 
 The library can throw the following exceptions:
+
 - LoginException, thrown when the login fails.
 - CommandException, thrown when the command execution fails and throwing errors is enabled.
 
@@ -88,16 +90,31 @@ The configuration file is located at `config/shell.php` and contains the followi
 
 ```php
 return [
+    // Whether logging is enabled
+    'logging'         => true,
+
+    // Whether to trim the output
+    'trimOutput'      => true,
+
     // The timeout for the shell connection
-    'timeout' => 10,
-    
+    'timeout'         => 10,
+
     // Determines whether errors should be thrown
-    'throw_error' => false,
-    
+    'throw_error'     => false,
+
     // The default shell connection class
-    'default_shell' => \DeZio\Shell\Driver\DefaultShellConnection::class,
-    
+    'default_shell'   => \DeZio\Shell\Driver\DefaultShellConnection::class,
+
     // The default command encoding method
-    'decode_commands' => 'base64'
+    'decode_commands' => \DeZio\Shell\Driver\Encoder\Base64Encoder::class
 ];
 ```
+
+## Encoding of commands
+
+Commands can be encoded using the `DeZio\Shell\Driver\Encoder\Base64Encoder` class.
+This class encodes the commands using base64 encoding. This is useful when you want to encode sensitive information in
+the command or escape special characters. You can create your own encoder by implementing the `DeZio\Shell\Contracts\CommandEncoder` interface.
+
+## Contributing
+You can contribute to this package by forking it and creating a pull request. Make sure to add tests for new features and bug fixes.

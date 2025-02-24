@@ -13,25 +13,68 @@ use DeZio\Shell\Contracts\ShellConnection;
 use DeZio\Shell\Contracts\ShellFileSystem;
 use DeZio\Shell\Contracts\ShellResponse;
 use DeZio\Shell\Driver\Encoder\Base64Encoder;
+use DeZio\Shell\Events\AfterShellExecute;
+use DeZio\Shell\Events\BeforeShellExecute;
 use DeZio\Shell\Exceptions\CommandException;
 use DeZio\Shell\Response\DefaultShellResponse;
+use Illuminate\Contracts\Container\BindingResolutionException;
+use JsonException;
 use Log;
 use phpseclib3\Net\SSH2;
 
+/**
+ *
+ */
 class DefaultShellConnection implements ShellConnection
 {
+    /**
+     * @var SSH2 $ssh The SSH2 connection instance.
+     */
     private SSH2 $ssh;
+
+    /**
+     * @var ServerCredentials $credentials The server credentials instance.
+     */
     private ServerCredentials $credentials;
+
+    /**
+     * @var CommandEncoder $encoder The command encoder instance.
+     */
     private CommandEncoder $encoder;
 
     private array $config = [
         'logging'    => true,
         'trim_output' => true,
         'timeout'    => 10,
-        'throwError' => false,
-        'throwErrorCounter' => -1
+        'throw_error' => false,
+        'throw_error_counter' => -1
     ];
 
+    /**
+     * Create a new SSH2 connection instance.
+     *
+     * @param SSH2 $ssh
+     * @param ServerCredentials $credentials
+     * @param array $config
+     * @return void
+     * @throws BindingResolutionException
+     */
+    public function __construct(SSH2 $ssh, ServerCredentials $credentials, array $config = [])
+    {
+        $this->ssh = $ssh;
+        $this->credentials = $credentials;
+        $this->config = array_merge($this->config, $config);
+        $this->encoder = app()->make($this->config['decode_commands']);
+    }
+
+    /**
+     * Configure the instance to throw an error with an optional maximum number of occurrences.
+     *
+     * @param bool $throwError Whether to enable or disable throwing errors.
+     * @param int $maxTimes The maximum number of times errors should be thrown (-1 for unlimited).
+     * @return ShellConnection
+     * @throws BindingResolutionException
+     */
     public function withThrowError(bool $throwError, int $maxTimes = -1): ShellConnection
     {
         $newConfig = $this->config;
@@ -41,19 +84,31 @@ class DefaultShellConnection implements ShellConnection
         return new self($this->ssh, $this->credentials, $newConfig);
     }
 
-    public function __construct(SSH2 $ssh, ServerCredentials $credentials, array $config = [])
+    public function io(): ShellFileSystem
     {
-        $this->ssh = $ssh;
-        $this->credentials = $credentials;
-        $this->config = array_merge($this->config, $config);
-        $this->encoder = app()->make($this->config['decode_commands']);
+        return new DefaultFileDriver($this);
     }
 
-    protected function log(string $level, string $message, array $meta = []): void
+    /**
+     * Retrieves the server credentials.
+     *
+     * @return ServerCredentials
+     */
+    public function getCredentials(): ServerCredentials
     {
-        if ($this->isLoggingEnabled()) {
-            Log::channel('shell')->$level($message, $meta);
-        }
+        return $this->credentials;
+    }
+
+    /**
+     * Executes a simple shell command by splitting it into arguments and delegating it to the exec method.
+     *
+     * @param string $command The shell command to be executed.
+     * @return ShellResponse
+     * @throws CommandException
+     */
+    public function execSimple(string $command): ShellResponse
+    {
+        return $this->exec(explode(' ', $command));
     }
 
     /**
@@ -73,6 +128,7 @@ class DefaultShellConnection implements ShellConnection
         $command = implode(' ', $args);
         $this->ssh->setTimeout($this->getTimeout());
 
+        event(new BeforeShellExecute($command));
         $command = $this->encoder->encode($command);
         $output = $this->ssh->exec($command);
         $error = $this->ssh->getLastError();
@@ -96,66 +152,97 @@ class DefaultShellConnection implements ShellConnection
         ]);
 
         $response = new DefaultShellResponse($output, $error, $exitCode);
+        event(new AfterShellExecute($response));
         $response->trimOutput($this->isTrimOutput());
         return $response;
     }
 
-    public function isLoggingEnabled(): bool
-    {
-        return $this->config['logging'];
-    }
-
-    public function isTrimOutput(): bool
-    {
-        return $this->config['trim_output'];
-    }
-
+    /**
+     * Determines the timeout for the command execution based on the configuration.
+     * @return int
+     */
     public function getTimeout(): int
     {
         return $this->config['timeout'];
     }
 
+    /**
+     * Decrements the error counter if it is greater than zero.
+     */
+    private function decrementThrowErrorCounter(): void
+    {
+        if ($this->config['throw_error_counter'] > 0) {
+            $this->config['throw_error_counter']--;
+        }
+
+        if ($this->config['throw_error_counter'] === 0) {
+            $this->config['throw_error_counter'] = -1;
+            $this->config['throw_error'] = false;
+        }
+    }
+
+    /**
+     * Determines if errors should be thrown based on the configuration.
+     * @return bool
+     */
     public function isThrowError(): bool
     {
         return $this->config['throw_error'];
     }
 
-    public function io(): ShellFileSystem
+    /**
+     * Logs a message with the specified level and metadata if logging is enabled.
+     *
+     * @param string $level The severity level of the log message.
+     * @param string $message The log message to be recorded.
+     * @param array $meta Additional metadata to include with the log message.
+     *
+     * @return void
+     */
+    protected function log(string $level, string $message, array $meta = []): void
     {
-        return new DefaultFileDriver($this);
-    }
-
-    public function getCredentials(): ServerCredentials
-    {
-        return $this->credentials;
-    }
-
-    public function execSimple(string $command): ShellResponse
-    {
-        return $this->exec(explode(' ', $command));
-    }
-
-    public function json(array $args): array
-    {
-        $response = $this->exec($args);
-        return json_decode((string)$response->getOutput(), true);
+        if ($this->isLoggingEnabled()) {
+            Log::channel('shell')->$level($message, $meta);
+        }
     }
 
     /**
-     * @return void
+     * Determines if logging is enabled based on the configuration.
+     *
+     * @return bool
      */
-    private function decrementThrowErrorCounter(): void
+    public function isLoggingEnabled(): bool
     {
-        if ($this->config['throwErrorCounter'] > 0) {
-            $this->config['throwErrorCounter']--;
-        }
-
-        if ($this->config['throwErrorCounter'] === 0) {
-            $this->config['throwErrorCounter'] = -1;
-            $this->config['throwError'] = false;
-        }
+        return $this->config['logging'];
     }
 
+    /**
+     * Determines if the command output should be trimmed based on the configuration.
+     *
+     * @return bool
+     */
+    public function isTrimOutput(): bool
+    {
+        return $this->config['trim_output'];
+    }
+
+    /**
+     * Executes a shell command and returns the output as a JSON-decoded associative array.
+     *
+     * @param array $args The arguments to be passed to the command.
+     * @return array The decoded JSON response as an associative array.
+     * @throws CommandException
+     * @throws JsonException
+     */
+    public function json(array $args): array
+    {
+        $response = $this->exec($args);
+        return json_decode((string)$response->getOutput(), true, 512, JSON_THROW_ON_ERROR);
+    }
+
+    /**
+     * Closes the SSH connection by disconnecting from it.
+     */
     public function close(): void
     {
         $this->ssh->disconnect();
