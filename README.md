@@ -1,94 +1,108 @@
-# Shell Manager for Laravel
+# Laravel Shell
 
-This package provides a simple way to communicate with servers via ssh. It is based on the phpseclib library
-It is a wrapper around the phpseclib library, which provides a simple way to communicate with servers via ssh.
-You can execute commands, process output and make I/O operations using this package.
+## Installation
 
-# Installation
+Install via Composer:
 
 ```bash
 composer require dezio/laravel-shell
 ```
 
-# Usage
+## Usage
 
-```php
-use DeZio\Shell\Authentication\ServerCredentials;use DeZio\Shell\Contracts\HasServerCredentials;use DeZio\Shell\Facades\SSH;
-
-class Server implements HasServerCredentials {
-
-    /**
-    * Returns a server credentials object.
-    * @return ServerCredentials
-    */
-    public function getServerCredentials(): ServerCredentials {
-        $login = new Login($this->username, $this->password);
-        return new ServerCredentials($login, $this->ip_address, $this->port);
-    }
-}
-
-$srv = new Server();
-
-// New connection with one time error throwing
-$ssh = SSH::addConnection($srv)->withThrowError(true, 1);
-$output = $ssh->exec(['ls', '-la']);
-
-echo "Output: " . $output->getOutput();
-echo "Error: " . $output->getError();
-echo "Exit code: " . $output->getExitCode();
-```
-
-## Core concept
-
-### ShellConnection
+Below is a sample usage script:
 
 ```php
 <?php
-interface ShellConnection
+
+use DeZio\Shell\Dynamic\DynamicServer;
+use DeZio\Shell\Facades\SSH;
+
+const TMP_HELLO_PATH = '/tmp/hello.txt';
+$server = new DynamicServer('192.168.1.2', 22, 'root', 'password');
+$shell = SSH::addConnection($server);
+$hostname = $shell->exec(['hostname']);
+
+echo $hostname->getOutput();
+
+$file = "Hello World!";
+$shell->io()->writeFile(TMP_HELLO_PATH, $file);
+$shell->io()->deleteFile(TMP_HELLO_PATH);
+```
+
+## Advanced Usage
+
+### SSH Key Authentication
+
+If you prefer key-based authentication, use your SSH private key as shown below:
+
+```php
+use DeZio\Shell\Dynamic\DynamicServer;
+use DeZio\Shell\Facades\SSH;
+
+$server = new DynamicServer('192.168.1.2', 22, 'root', null);
+$server->setPrivateKey('/path/to/private/key.pem');
+$shell = SSH::addConnection($server);
+$response = $shell->exec(['hostname']);
+echo $response->getOutput();
+```
+
+### Using Laravel Models for SSH Access
+
+Any Laravel model can be used for managing SSH credentials by implementing the HasServerCredentials interface:
+
+```php
+use Illuminate\Database\Eloquent\Model;
+use DeZio\Shell\Contracts\HasServerCredentials;
+use DeZio\Shell\Authentication\ServerCredentials;
+
+class Server extends Model implements HasServerCredentials
 {
-    /**
-    * Retrieves the server credentials.
-    *
-    * @return ServerCredentials
-    */
-    public function getCredentials(): ServerCredentials;
-
-    /**
-     * Execute the provided arguments and return the shell response.
-     *
-     * @param array $args Array of arguments to be executed.
-     * @return ShellResponse The response from the shell execution.
-     */
-    public function exec(array $args): ShellResponse;
-
-    /**
-     * Process the provided arguments and return a JSON-encoded array.
-     *
-     * @param array $args Array of arguments to be processed.
-     * @return array The JSON-encoded representation of the processed arguments.
-     */
-    public function json(array $args): array;
+    // Assuming the model has host, port, username and password_or_key properties.
+    public function getServerCredentials(): ServerCredentials
+    {
+        return new ServerCredentials($this->host, $this->port, $this->username, $this->password_or_key);
+    }
 }
 ```
 
-## Exceptions
+### Custom Command Encoders
 
-The library can throw the following exceptions:
+Encoders transform commands before execution. To create your own, implement the CommandEncoder interface:
 
-- LoginException, thrown when the login fails.
-- CommandException, thrown when the command execution fails and throwing errors is enabled.
+```php
+use DeZio\Shell\Contracts\CommandEncoder;
+
+class MyCustomEncoder implements CommandEncoder
+{
+    public function encode(string $command): string
+    {
+        // ...custom encoding logic...
+        return base64_encode($command);
+    }
+}
+```
+
+Register your custom encoder in the configuration file (`config/shell.php`):
+
+```php
+'decode_commands' => MyCustomEncoder::class,
+```
 
 ## Configuration
 
-The package provides a configuration file that can be published using the following command:
+Publish and customize the configuration with:
 
 ```bash
-php artisan vendor:publish --provider="DeZio\Shell\ShellServiceProvider" --tag="config"
+php artisan vendor:publish --provider="DeZio\Shell\ShellServiceProvider"
 ```
 
-The configuration file is located at `config/shell.php` and contains the following options:
+### Configuration Details
+
+The configuration file located at `config/shell.php` defines various options:
 
 ```php
+<?php
 return [
     // Whether logging is enabled
     'logging'         => true,
@@ -96,7 +110,7 @@ return [
     // Whether to trim the output
     'trimOutput'      => true,
 
-    // The timeout for the shell connection
+    // The timeout for the shell connection (in seconds)
     'timeout'         => 10,
 
     // Determines whether errors should be thrown
@@ -110,11 +124,12 @@ return [
 ];
 ```
 
-## Encoding of commands
-
-Commands can be encoded using the `DeZio\Shell\Driver\Encoder\Base64Encoder` class.
-This class encodes the commands using base64 encoding. This is useful when you want to encode sensitive information in
-the command or escape special characters. You can create your own encoder by implementing the `DeZio\Shell\Contracts\CommandEncoder` interface.
+Customize these options as needed.
 
 ## Contributing
-You can contribute to this package by forking it and creating a pull request. Make sure to add tests for new features and bug fixes.
+
+Contributions are welcome. Fork, create a feature branch, write tests, and open a pull request.
+
+## License
+
+This package is open source and available under the MIT License.

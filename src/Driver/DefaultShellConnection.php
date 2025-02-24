@@ -8,6 +8,7 @@
 namespace DeZio\Shell\Driver;
 
 use DeZio\Shell\Authentication\ServerCredentials;
+use DeZio\Shell\Configuration\ShellConfig;
 use DeZio\Shell\Contracts\CommandEncoder;
 use DeZio\Shell\Contracts\ShellConnection;
 use DeZio\Shell\Contracts\ShellFileSystem;
@@ -42,13 +43,10 @@ class DefaultShellConnection implements ShellConnection
      */
     private CommandEncoder $encoder;
 
-    private array $config = [
-        'logging'    => true,
-        'trim_output' => true,
-        'timeout'    => 10,
-        'throw_error' => false,
-        'throw_error_counter' => -1
-    ];
+    /**
+     * @var ShellConfig $config The shell configuration instance.
+     */
+    private ShellConfig $config;
 
     /**
      * Create a new SSH2 connection instance.
@@ -63,8 +61,8 @@ class DefaultShellConnection implements ShellConnection
     {
         $this->ssh = $ssh;
         $this->credentials = $credentials;
-        $this->config = array_merge($this->config, $config);
-        $this->encoder = app()->make($this->config['decode_commands']);
+        $this->config = ShellConfig::fromArray($config);
+        $this->encoder = app()->make($this->config->getDecodeCommands());
     }
 
     /**
@@ -77,11 +75,16 @@ class DefaultShellConnection implements ShellConnection
      */
     public function withThrowError(bool $throwError, int $maxTimes = -1): ShellConnection
     {
-        $newConfig = $this->config;
-        $newConfig['throw_error'] = $throwError;
-        $newConfig['throw_error_counter'] = $maxTimes;
-
-        return new self($this->ssh, $this->credentials, $newConfig);
+        $newConfigArray = [
+            'logging'             => $this->config->isLoggingEnabled(),
+            'trim_output'         => $this->config->isTrimOutput(),
+            'timeout'             => $this->config->getTimeout(),
+            'throw_error'         => $throwError,
+            'throw_error_counter' => $maxTimes,
+            'default_shell'       => $this->config->getDefaultShell(),
+            'decode_commands'     => $this->config->getDecodeCommands(),
+        ];
+        return new self($this->ssh, $this->credentials, $newConfigArray);
     }
 
     public function io(): ShellFileSystem
@@ -126,7 +129,7 @@ class DefaultShellConnection implements ShellConnection
     public function exec(array $args): ShellResponse
     {
         $command = implode(' ', $args);
-        $this->ssh->setTimeout($this->getTimeout());
+        $this->ssh->setTimeout($this->config->getTimeout());
 
         event(new BeforeShellExecute($command));
         $command = $this->encoder->encode($command);
@@ -135,7 +138,7 @@ class DefaultShellConnection implements ShellConnection
         $exitCode = $this->ssh->getExitStatus();
 
         $this->decrementThrowErrorCounter();
-        if ($exitCode !== 0 && $this->isThrowError()) {
+        if ($exitCode !== 0 && $this->config->isThrowError()) {
             $this->log('error', "Command failed: $command", [
                 'output'    => $output,
                 'error'     => $error,
@@ -153,7 +156,7 @@ class DefaultShellConnection implements ShellConnection
 
         $response = new DefaultShellResponse($output, $error, $exitCode);
         event(new AfterShellExecute($response));
-        $response->trimOutput($this->isTrimOutput());
+        $response->trimOutput($this->config->isTrimOutput());
         return $response;
     }
 
@@ -163,7 +166,7 @@ class DefaultShellConnection implements ShellConnection
      */
     public function getTimeout(): int
     {
-        return $this->config['timeout'];
+        return $this->config->getTimeout();
     }
 
     /**
@@ -171,14 +174,7 @@ class DefaultShellConnection implements ShellConnection
      */
     private function decrementThrowErrorCounter(): void
     {
-        if ($this->config['throw_error_counter'] > 0) {
-            $this->config['throw_error_counter']--;
-        }
-
-        if ($this->config['throw_error_counter'] === 0) {
-            $this->config['throw_error_counter'] = -1;
-            $this->config['throw_error'] = false;
-        }
+        $this->config->decrementThrowErrorCounter();
     }
 
     /**
@@ -187,7 +183,7 @@ class DefaultShellConnection implements ShellConnection
      */
     public function isThrowError(): bool
     {
-        return $this->config['throw_error'];
+        return $this->config->isThrowError();
     }
 
     /**
@@ -201,7 +197,7 @@ class DefaultShellConnection implements ShellConnection
      */
     protected function log(string $level, string $message, array $meta = []): void
     {
-        if ($this->isLoggingEnabled()) {
+        if ($this->config->isLoggingEnabled()) {
             Log::channel('shell')->$level($message, $meta);
         }
     }
@@ -213,7 +209,7 @@ class DefaultShellConnection implements ShellConnection
      */
     public function isLoggingEnabled(): bool
     {
-        return $this->config['logging'];
+        return $this->config->isLoggingEnabled();
     }
 
     /**
@@ -223,7 +219,7 @@ class DefaultShellConnection implements ShellConnection
      */
     public function isTrimOutput(): bool
     {
-        return $this->config['trim_output'];
+        return $this->config->isTrimOutput();
     }
 
     /**
