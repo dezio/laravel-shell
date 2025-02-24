@@ -13,6 +13,8 @@ use DeZio\Shell\Contracts\ShellConnection;
 use DeZio\Shell\Contracts\ShellFileSystem;
 use DeZio\Shell\Contracts\ShellResponse;
 use DeZio\Shell\Driver\Encoder\Base64Encoder;
+use DeZio\Shell\Events\AfterShellExecute;
+use DeZio\Shell\Events\BeforeShellExecute;
 use DeZio\Shell\Exceptions\CommandException;
 use DeZio\Shell\Response\DefaultShellResponse;
 use Log;
@@ -73,6 +75,7 @@ class DefaultShellConnection implements ShellConnection
         $command = implode(' ', $args);
         $this->ssh->setTimeout($this->getTimeout());
 
+        event(new BeforeShellExecute($command));
         $command = $this->encoder->encode($command);
         $output = $this->ssh->exec($command);
         $error = $this->ssh->getLastError();
@@ -96,6 +99,7 @@ class DefaultShellConnection implements ShellConnection
         ]);
 
         $response = new DefaultShellResponse($output, $error, $exitCode);
+        event(new AfterShellExecute($response));
         $response->trimOutput($this->isTrimOutput());
         return $response;
     }
