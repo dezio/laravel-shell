@@ -46,8 +46,8 @@ class DefaultShellConnection implements ShellConnection
         'logging'    => true,
         'trim_output' => true,
         'timeout'    => 10,
-        'throwError' => false,
-        'throwErrorCounter' => -1
+        'throw_error' => false,
+        'throw_error_counter' => -1
     ];
 
     /**
