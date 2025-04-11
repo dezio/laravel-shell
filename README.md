@@ -1,5 +1,12 @@
 # Laravel Shell
 
+The README file provides an overview of the Laravel Shell package, which simplifies executing SSH commands and managing remote servers directly from a Laravel application. 
+
+## Description
+Laravel Shell allows you to transform Laravel models into SSH-capable objects, enabling seamless interaction with remote servers.
+
+It uses phpseclib/phpseclib under the hood.
+
 ## Installation
 
 Install via Composer:
@@ -8,7 +15,19 @@ Install via Composer:
 composer require dezio/laravel-shell
 ```
 
+Publish and customize the configuration with:
+
+```bash
+php artisan vendor:publish --provider="DeZio\Shell\ShellServiceProvider"
+```
+
 ## Usage
+The package provides an API to:
+
+- Establish SSH connections to remote servers.
+- Give models an interface to make them _SSH_able.
+- Execute commands and retrieve their output.
+- Manage files on remote servers (e.g., create, write, delete).
 
 Below is a sample usage script:
 
@@ -19,6 +38,7 @@ use DeZio\Shell\Dynamic\DynamicServer;
 use DeZio\Shell\Facades\SSH;
 
 const TMP_HELLO_PATH = '/tmp/hello.txt';
+// Password can be a string or a phpseclib PrivateKey object
 $server = new DynamicServer('192.168.1.2', 22, 'root', 'password');
 $shell = SSH::addConnection($server);
 $hostname = $shell->exec(['hostname']);
@@ -72,29 +92,6 @@ class Server extends Model implements HasServerCredentials
         return new ServerCredentials($login, $this->host, $this->port);
     }
 }
-```
-
-### Custom Command Encoders
-
-Encoders transform commands before execution. To create your own, implement the CommandEncoder interface:
-
-```php
-use DeZio\Shell\Contracts\CommandEncoder;
-
-class MyCustomEncoder implements CommandEncoder
-{
-    public function encode(string $command): string
-    {
-        // ...custom encoding logic...
-        return base64_encode($command);
-    }
-}
-```
-
-Register your custom encoder in the configuration file (`config/shell.php`):
-
-```php
-'decode_commands' => MyCustomEncoder::class,
 ```
 
 ## System Information Examples
