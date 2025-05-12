@@ -188,3 +188,6 @@ Contributions are welcome. Fork, create a feature branch, write tests, and open 
 ## License
 
 This package is open source and available under the MIT License.
+
+## Hosting
+In case you need viable VPS Hosting, you can check out [https://www.prepaid-hoster.de/vserver/root-server-mieten.html](Prepaid Hoster Root Server)
