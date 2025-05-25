@@ -1,11 +1,18 @@
 # Laravel Shell
 
-The README file provides an overview of the Laravel Shell package, which simplifies executing SSH commands and managing remote servers directly from a Laravel application. 
+A powerful Laravel package for executing SSH commands and managing remote servers directly from your Laravel application.
 
 ## Description
-Laravel Shell allows you to transform Laravel models into SSH-capable objects, enabling seamless interaction with remote servers.
 
-It uses phpseclib/phpseclib under the hood.
+Laravel Shell allows you to transform Laravel models into SSH-capable objects, enabling seamless interaction with remote servers. It provides a clean, fluent API for executing commands, managing files, and retrieving system information from remote servers.
+
+This package uses [phpseclib/phpseclib](https://github.com/phpseclib/phpseclib) under the hood for secure SSH connections.
+
+## Requirements
+
+- PHP 8.0 or higher
+- Laravel 11.0 or higher
+- phpseclib/phpseclib 3.0 or higher
 
 ## Installation
 
@@ -15,6 +22,8 @@ Install via Composer:
 composer require dezio/laravel-shell
 ```
 
+The package will automatically register its service provider if you're using Laravel's package auto-discovery.
+
 Publish and customize the configuration with:
 
 ```bash
@@ -22,14 +31,17 @@ php artisan vendor:publish --provider="DeZio\Shell\ShellServiceProvider"
 ```
 
 ## Usage
-The package provides an API to:
 
-- Establish SSH connections to remote servers.
-- Give models an interface to make them _SSH_able.
-- Execute commands and retrieve their output.
-- Manage files on remote servers (e.g., create, write, delete).
+### Basic Usage
 
-Below is a sample usage script:
+The package provides a simple API to:
+
+- Establish SSH connections to remote servers
+- Execute commands and retrieve their output
+- Manage files on remote servers (create, write, delete)
+- Transform Laravel models into SSH-capable objects
+
+Here's a basic example:
 
 ```php
 <?php
@@ -37,30 +49,44 @@ Below is a sample usage script:
 use DeZio\Shell\Dynamic\DynamicServer;
 use DeZio\Shell\Facades\SSH;
 
-const TMP_HELLO_PATH = '/tmp/hello.txt';
-// Password can be a string or a phpseclib PrivateKey object
+// Create a server connection
 $server = new DynamicServer('192.168.1.2', 22, 'root', 'password');
 $shell = SSH::addConnection($server);
-$hostname = $shell->exec(['hostname']);
 
-echo $hostname->getOutput();
+// Execute a command
+$response = $shell->exec(['hostname']);
 
-$file = "Hello World!";
-$shell->io()->writeFile(TMP_HELLO_PATH, $file);
-$shell->io()->deleteFile(TMP_HELLO_PATH);
+// Get the command output
+echo $response->getOutput();
 ```
 
-The returned response object (of type ShellResponse) provides additional details:
-- getOutput(): Returns the standard output from the command.
-- getError(): Returns any error messages or standard error output.
-- getExitCode(): Returns the exit code (0 usually indicates success).
-- isSuccess(): Boolean flag that indicates whether the command executed successfully.
+### Response Handling
 
-## Advanced Usage
+The returned response object (of type `ShellResponse`) provides several methods:
+
+- `getOutput()`: Returns the standard output from the command
+- `getError()`: Returns any error messages or standard error output
+- `getExitCode()`: Returns the exit code (0 usually indicates success)
+- `isSuccess()`: Boolean flag that indicates whether the command executed successfully
+
+### File Operations
+
+You can perform file operations on the remote server:
+
+```php
+// Write a file
+$shell->io()->writeFile('/tmp/hello.txt', 'Hello World!');
+
+// Read a file
+$content = $shell->io()->readFile('/tmp/hello.txt');
+
+// Delete a file
+$shell->io()->deleteFile('/tmp/hello.txt');
+```
 
 ### SSH Key Authentication
 
-If you prefer key-based authentication, use your SSH private key as shown below:
+If you prefer key-based authentication, use your SSH private key:
 
 ```php
 use DeZio\Shell\Dynamic\DynamicServer;
@@ -75,7 +101,7 @@ echo $response->getOutput();
 
 ### Using Laravel Models for SSH Access
 
-Any Laravel model can be used for managing SSH credentials by implementing the HasServerCredentials interface:
+Any Laravel model can be used for managing SSH credentials by implementing the `HasServerCredentials` interface:
 
 ```php
 use Illuminate\Database\Eloquent\Model;
@@ -85,7 +111,7 @@ use DeZio\Shell\Authentication\ServerCredentials;
 
 class Server extends Model implements HasServerCredentials
 {
-    // Assuming the model has host, port, username and password_or_key properties.
+    // Assuming the model has host, port, username and password_or_key properties
     public function getServerCredentials(): ServerCredentials
     {
         $login = new Login($this->username, $this->password_or_key);
@@ -94,11 +120,17 @@ class Server extends Model implements HasServerCredentials
 }
 ```
 
+Then use it with the SSH facade:
+
+```php
+$server = Server::find(1);
+$shell = SSH::addConnection($server);
+```
+
 ## System Information Examples
 
-### Parsing Current Load Average Using /proc/loadavg
+### Parsing Current Load Average
 
-Retrieve the load average by reading /proc/loadavg.
 ```php
 use DeZio\Shell\Dynamic\DynamicServer;
 use DeZio\Shell\Facades\SSH;
@@ -115,9 +147,8 @@ if(count($parts) >= 3) {
 }
 ```
 
-### Getting Memory Usage Using /proc/meminfo
+### Getting Memory Usage
 
-Retrieve memory info by reading /proc/meminfo.
 ```php
 use DeZio\Shell\Dynamic\DynamicServer;
 use DeZio\Shell\Facades\SSH;
@@ -146,14 +177,6 @@ if ($memTotal !== null && $memAvailable !== null) {
 
 ## Configuration
 
-Publish and customize the configuration with:
-
-```bash
-php artisan vendor:publish --provider="DeZio\Shell\ShellServiceProvider"
-```
-
-### Configuration Details
-
 The configuration file located at `config/shell.php` defines various options:
 
 ```php
@@ -179,15 +202,35 @@ return [
 ];
 ```
 
-Customize these options as needed.
+### Configuration Options
+
+- **logging**: Enable/disable logging of SSH operations
+- **trimOutput**: Whether to trim whitespace from command output
+- **timeout**: Connection timeout in seconds
+- **throw_error**: Whether to throw exceptions on command errors
+- **default_shell**: The default shell connection implementation
+- **decode_commands**: The encoder used for command encoding
+
+## Events
+
+The package fires the following events:
+
+- **BeforeShellExecute**: Fired before a shell command is executed
+- **AfterShellExecute**: Fired after a shell command is executed
+- **ShellConnected**: Fired when a new SSH connection is established
 
 ## Contributing
 
-Contributions are welcome. Fork, create a feature branch, write tests, and open a pull request.
+Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## License
 
-This package is open source and available under the MIT License.
+This package is open-source software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+
+## Author
+
+Created by Dennis Ziolkowski.
 
 ## Hosting
+
 In case you need viable VPS Hosting, you can check out Prepaid-Hoster at https://www.prepaid-hoster.de/vserver/root-server-mieten.html
