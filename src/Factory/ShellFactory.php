@@ -24,7 +24,6 @@ use phpseclib3\Net\SSH2;
  */
 class ShellFactory implements ShellFactoryContract
 {
-    
     /**
      * Creates a new SSH2 connection using provided server credentials
      * 
