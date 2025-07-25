@@ -9,6 +9,7 @@ namespace DeZio\Shell\Factory;
 
 use DeZio\Shell\Authentication\ServerCredentials;
 use DeZio\Shell\Contracts\ShellConnection;
+use DeZio\Shell\Contracts\ShellFactoryContract;
 use DeZio\Shell\Exceptions\ConfigurationMissingException;
 use DeZio\Shell\Exceptions\LoginException;
 use phpseclib3\Net\SSH2;
@@ -21,7 +22,7 @@ use phpseclib3\Net\SSH2;
  *
  * @since 1.0.0
  */
-class ShellFactory
+class ShellFactory implements ShellFactoryContract
 {
     
     /**

@@ -26,6 +26,7 @@ class DynamicServer implements HasServerCredentials
     private int $port;
     private string $username;
     private mixed $password;
+    protected ?string $loginId;
 
     /**
      * Constructs a new instance of the DynamicServer.

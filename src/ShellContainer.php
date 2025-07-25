@@ -11,7 +11,6 @@ use Context;
 use DeZio\Shell\Contracts\HasServerCredentials;
 use DeZio\Shell\Contracts\ShellFactoryContract;
 use DeZio\Shell\Events\ShellConnected;
-use DeZio\Shell\Factory\ShellFactory;
 use Exception;
 use Log;
 
@@ -63,6 +62,14 @@ class ShellContainer
         $loginId = $credentials->getId();
 
         return $this->connections[$loginId] ?? ($this->connections[$loginId] = $this->createConnection($connection));
+    }
+
+    public function forceReconnect(HasServerCredentials $connection): Contracts\ShellConnection
+    {
+        $credentials = $connection->getServerCredentials();
+        unset($this->connections[$credentials->getId()]);
+
+        return $this->addConnection($connection);
     }
 
     /**
