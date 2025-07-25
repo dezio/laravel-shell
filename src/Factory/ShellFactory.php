@@ -33,7 +33,7 @@ class ShellFactory
      */
     public function createShellConnection(ServerCredentials $credentials): ShellConnection
     {
-        $ssh = new SSH2($credentials->getHost(), $credentials->getPort());
+        $ssh = new SSH2($credentials->getHost(), $credentials->getPort(), 0);
         if (!$ssh->login($credentials->getLogin()->getUsername(), $credentials->getLogin()->getPassword())) {
             throw new LoginException($credentials);
         } // if end
