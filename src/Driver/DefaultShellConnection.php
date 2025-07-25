@@ -147,9 +147,9 @@ class DefaultShellConnection implements ShellConnection
             throw new CommandException("Command failed: $command");
         }
 
-        $this->log('info', "Command executed", [
-            'command'   => $command,
+        $this->log('info', "Command executed: {command}", [
             'output'    => str($output)->limit()->trim()->replace("\n", " ")->value(),
+            'command'   => $command,
             'error'     => strlen($error),
             'exit_code' => $exitCode
         ]);
