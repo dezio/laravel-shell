@@ -133,6 +133,7 @@ class DefaultShellConnection implements ShellConnection
 
         $this->log('info', "Executing command: {command}", [
             'command'    => $command,
+            'timeout'   => $this->config->getTimeout(),
         ]);
 
         event(new BeforeShellExecute($command));
