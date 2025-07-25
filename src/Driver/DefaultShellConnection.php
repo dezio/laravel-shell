@@ -131,6 +131,10 @@ class DefaultShellConnection implements ShellConnection
         $command = implode(' ', $args);
         $this->ssh->setTimeout($this->config->getTimeout());
 
+        $this->log('info', "Executing command: {command}", [
+            'command'    => $command,
+        ]);
+
         event(new BeforeShellExecute($command));
         $command = $this->encoder->encode($command);
         $output = $this->ssh->exec($command);
