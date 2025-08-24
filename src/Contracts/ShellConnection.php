@@ -48,4 +48,6 @@ interface ShellConnection
      *
      */
     public function io(): ShellFileSystem;
+
+    public function setTimeout(int $timeout);
 }

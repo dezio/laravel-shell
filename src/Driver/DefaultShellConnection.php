@@ -13,7 +13,6 @@ use DeZio\Shell\Contracts\CommandEncoder;
 use DeZio\Shell\Contracts\ShellConnection;
 use DeZio\Shell\Contracts\ShellFileSystem;
 use DeZio\Shell\Contracts\ShellResponse;
-use DeZio\Shell\Driver\Encoder\Base64Encoder;
 use DeZio\Shell\Events\AfterShellExecute;
 use DeZio\Shell\Events\BeforeShellExecute;
 use DeZio\Shell\Exceptions\CommandException;
@@ -132,8 +131,8 @@ class DefaultShellConnection implements ShellConnection
         $this->ssh->setTimeout($this->config->getTimeout());
 
         $this->log('info', "Executing command: {command}", [
-            'command'    => $command,
-            'timeout'   => $this->config->getTimeout(),
+            'command' => $command,
+            'timeout' => $this->config->getTimeout(),
         ]);
 
         event(new BeforeShellExecute($command));
@@ -247,5 +246,12 @@ class DefaultShellConnection implements ShellConnection
     public function close(): void
     {
         $this->ssh->disconnect();
+    }
+
+    public function setTimeout(int $timeout)
+    {
+        $this->config->timeout = $timeout;
+
+        return $this;
     }
 }
