@@ -53,8 +53,17 @@ class DefaultShellResponse implements ShellResponse, Stringable
         return $this->exitCode === 0;
     }
 
-    public function __toString()
+    public function __toString(): string
     {
         return $this->getOutput();
+    }
+
+    public function throw(): ShellResponse
+    {
+        if ($this->isSuccess()) {
+            return $this;
+        }
+
+        throw new \Exception($this->getError());
     }
 }

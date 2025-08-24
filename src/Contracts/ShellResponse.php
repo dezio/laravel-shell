@@ -55,4 +55,6 @@ interface ShellResponse
      * @return bool
      */
     public function isSuccess(): bool;
+
+    public function throw(): self;
 }
