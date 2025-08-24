@@ -248,7 +248,7 @@ class DefaultShellConnection implements ShellConnection
         $this->ssh->disconnect();
     }
 
-    public function setTimeout(int $timeout)
+    public function setTimeout(int $timeout): ShellConnection
     {
         $this->config->timeout = $timeout;
 
