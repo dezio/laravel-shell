@@ -58,7 +58,7 @@ class ShellContainer
             ]);
         } // if end
 
-        Context::add('ssh', $credentials->toArray());
+//        Context::add('ssh', $credentials->toArray());
         $loginId = $credentials->getId();
 
         return $this->connections[$loginId] ?? ($this->connections[$loginId] = $this->createConnection($connection));
